@@ -21,7 +21,7 @@ for lab in $LABS; do
     fi
     score=`egrep -o "Score: [0-9]+/[0-9]+" .score`
     echo "$lab $score" >> $summary
-    make clean
+    make clean > /dev/null
     popd > /dev/null
 done
 
