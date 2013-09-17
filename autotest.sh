@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_COMMIT=95a80f598fc57c60aed3737c60ee437d94eb8540
+BASE_COMMIT=bdb0319895cd18c5f654667bbd9f8f73b775abb0
 LABS=`git diff $BASE_COMMIT --stat | grep -o "lab[0-9]" | uniq`
 
 if [ "$LABS" = "" ]; then
