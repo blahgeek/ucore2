@@ -1,6 +1,9 @@
 #!/bin/bash
 
 BASE_COMMIT=bdb0319895cd18c5f654667bbd9f8f73b775abb0
+if [ -f .base_commit ]; then
+    BASE_COMMIT=`cat .base_commit`
+fi
 LABS=`git diff $BASE_COMMIT --stat | grep -o "lab[0-9]" | uniq`
 
 if [ "$LABS" = "" ]; then
@@ -38,4 +41,5 @@ for lab in $LABS; do
     rm $lab/.score
 done
 
+echo $BASE_COMMIT > .base_commit
 exit $failed
