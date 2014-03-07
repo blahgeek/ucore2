@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_COMMIT=bdb0319895cd18c5f654667bbd9f8f73b775abb0
+BASE_COMMIT=a26c0705167d60f1f5f39784d8e3cd9866d3a205
 if [ -f .base_commit ]; then
     BASE_COMMIT=`cat .base_commit`
 fi
