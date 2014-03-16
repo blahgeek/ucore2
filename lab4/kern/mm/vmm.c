@@ -361,6 +361,24 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
     *   mm->pgdir : the PDT of these vma
     *
     */
+    ptep = get_pte(mm->pgdir, addr, 1); // get or create
+    struct Page * page = NULL;
+    if(*ptep == 0){
+        // isn't exist, alloc him a page and it's done
+        page = pgdir_alloc_page(mm->pgdir, addr, perm);
+        if(page == NULL)
+            goto failed;
+    }
+    else{
+        if(!swap_init_ok){
+            cprintf("no swap_init_ok but ptep is %x, failed\n", *ptep);
+            goto failed;
+        }
+        // a swap entry, let's get it out
+        int _swap_in_ret = swap_in(mm, addr, &page);
+        page_insert(mm->pgdir, page, addr, perm); // insert the physical addr of page in pgdir
+        swap_map_swappable(mm, addr, page, _swap_in_ret); // why would it need _swap_in_ret?
+    }
 #if 0
     /*LAB3 EXERCISE 1: YOUR CODE*/
     ptep = ???              //(1) try to find a pte, if pte's PT(Page Table) isn't existed, then create a PT.
