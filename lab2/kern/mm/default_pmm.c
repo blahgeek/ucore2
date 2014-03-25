@@ -103,6 +103,7 @@ default_alloc_pages(size_t n) {
         if (page->property > n) {
             struct Page *p = page + n;
             p->property = page->property - n;
+            SetPageProperty(p);
             list_add(le_prev, &(p->page_link));
         }
         nr_free -= n;
@@ -119,6 +120,7 @@ merge_to_next_page(list_entry_t * le){
     struct Page * p_next = le2page(le_next, page_link);
     assert(p + p->property == p_next);
     p->property += (p_next->property);
+    SetPageProperty(p);
     ClearPageProperty(p_next);
     list_del(le_next);
 }
