@@ -234,10 +234,10 @@ trap_dispatch(struct trapframe *tf) {
          */
         ticks += 1;
         if(ticks == TICK_NUM){
-            print_ticks();
-            ticks = 0;
             if(current != NULL)
                 current->need_resched = 1;
+            // print_ticks();
+            ticks = 0;
         }
         /* LAB5 YOUR CODE */
         /* you should upate you lab1 code (just add ONE or TWO lines of code):
