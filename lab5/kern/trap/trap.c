@@ -54,8 +54,21 @@ idt_init(void) {
       *     Notice: the argument of lidt is idt_pd. try to find it!
       */
      /* LAB5 YOUR CODE */ 
+    extern uintptr_t __vectors[];
+    int i = 0 ;
+    for( ; i < 256 ; i += 1){
+        bool istrap = (i < 32) || i == T_SYSCALL ||
+                      i == T_SWITCH_TOU || i == T_SWITCH_TOK;
+        SETGATE(idt[i],
+                istrap, //is trap ?
+                GD_KTEXT, // kernel code segment
+                __vectors[i],
+                // only syscall is allowed to call via `int` by user
+                (i == T_SYSCALL ? DPL_USER : DPL_KERNEL));
      //you should update your lab1 code (just add ONE or TWO lines of code), let user app to use syscall to get the service of ucore
      //so you should setup the syscall interrupt gate in here
+    }
+    lidt(&idt_pd);
 }
 
 static const char *
@@ -219,6 +232,13 @@ trap_dispatch(struct trapframe *tf) {
          * (2) Every TICK_NUM cycle, you can print some info using a funciton, such as print_ticks().
          * (3) Too Simple? Yes, I think so!
          */
+        ticks += 1;
+        if(ticks == TICK_NUM){
+            print_ticks();
+            ticks = 0;
+            if(current != NULL)
+                current->need_resched = 1;
+        }
         /* LAB5 YOUR CODE */
         /* you should upate you lab1 code (just add ONE or TWO lines of code):
          *    Every TICK_NUM cycle, you should set current process's current->need_resched = 1
