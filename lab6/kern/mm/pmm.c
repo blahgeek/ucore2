@@ -384,6 +384,24 @@ get_pte(pde_t *pgdir, uintptr_t la, bool create) {
      *   PTE_W           0x002                   // page table/directory entry flags bit : Writeable
      *   PTE_U           0x004                   // page table/directory entry flags bit : User can access
      */
+    pde_t dir_entry = pgdir[PDX(la)];
+    if(dir_entry & PTE_P){ // present
+        pte_t * table_base_addr = KADDR(PTE_ADDR(dir_entry));
+        return table_base_addr + PTX(la);
+    }
+    if(!create)
+        return NULL;
+
+    struct Page * p = alloc_page();
+    assert(p != NULL);
+    page_ref_inc(p);
+    // pte_t * table_entry_p = page2pa(p);
+    uintptr_t pa = page2pa(p);
+    pte_t * ret = KADDR(pa);
+
+    pgdir[PDX(la)] = pa | PTE_P | PTE_W | PTE_U;
+    memset(ret, 0, PGSIZE);
+    return ret + PTX(la);
 #if 0
     pde_t *pdep = NULL;   // (1) find page directory entry
     if (0) {              // (2) check if entry is not present
@@ -432,6 +450,14 @@ page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep) {
      * DEFINEs:
      *   PTE_P           0x001                   // page table/directory entry flags bit : Present
      */
+    if(!((*ptep) & PTE_P)) // not present
+        return;
+    struct Page * page = pte2page(*ptep);
+    page_ref_dec(page);
+    if(page_ref(page) == 0)
+        free_page(page);
+    memset(ptep, 0, sizeof(pte_t));
+    tlb_invalidate(pgdir, la);
 #if 0
     if (0) {                      //(1) check if page is present
         struct Page *page = NULL; //(2) find corresponding page to pte
@@ -500,29 +526,34 @@ copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) {
             if ((nptep = get_pte(to, start, 1)) == NULL) {
                 return -E_NO_MEM;
             }
-        uint32_t perm = (*ptep & PTE_USER);
-        //get page from ptep
-        struct Page *page = pte2page(*ptep);
-        // alloc a page for process B
-        struct Page *npage=alloc_page();
-        assert(page!=NULL);
-        assert(npage!=NULL);
-        int ret=0;
-        /* LAB5:EXERCISE2 YOUR CODE
-         * replicate content of page to npage, build the map of phy addr of nage with the linear addr start
-         *
-         * Some Useful MACROs and DEFINEs, you can use them in below implementation.
-         * MACROs or Functions:
-         *    page2kva(struct Page *page): return the kernel vritual addr of memory which page managed (SEE pmm.h)
-         *    page_insert: build the map of phy addr of an Page with the linear addr la
-         *    memcpy: typical memory copy function
-         *
-         * (1) find src_kvaddr: the kernel virtual address of page
-         * (2) find dst_kvaddr: the kernel virtual address of npage
-         * (3) memory copy from src_kvaddr to dst_kvaddr, size is PGSIZE
-         * (4) build the map of phy addr of  nage with the linear addr start
-         */
-        assert(ret == 0);
+            uint32_t perm = (*ptep & PTE_USER);
+            //get page from ptep
+            struct Page *page = pte2page(*ptep);
+            // alloc a page for process B
+            struct Page *npage=alloc_page();
+            assert(page!=NULL);
+            assert(npage!=NULL);
+            int ret=0;
+            /* LAB5:EXERCISE2 YOUR CODE
+             * replicate content of page to npage, build the map of phy addr of nage with the linear addr start
+             *
+             * Some Useful MACROs and DEFINEs, you can use them in below implementation.
+             * MACROs or Functions:
+             *    page2kva(struct Page *page): return the kernel vritual addr of memory which page managed (SEE pmm.h)
+             *    page_insert: build the map of phy addr of an Page with the linear addr la
+             *    memcpy: typical memory copy function
+             *
+             * (1) find src_kvaddr: the kernel virtual address of page
+             * (2) find dst_kvaddr: the kernel virtual address of npage
+             * (3) memory copy from src_kvaddr to dst_kvaddr, size is PGSIZE
+             * (4) build the map of phy addr of  nage with the linear addr start
+             */
+            void * src_kvaddr = page2kva(page);
+            void * dst_kvaddr = page2kva(npage);
+            memcpy(dst_kvaddr, src_kvaddr, PGSIZE);
+            ret = page_insert(to, npage, start, perm);
+
+            assert(ret == 0);
         }
         start += PGSIZE;
     } while (start != 0 && start < end);
