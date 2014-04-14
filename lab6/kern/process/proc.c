@@ -95,8 +95,6 @@ alloc_proc(void) {
         proc->parent = current;
         if(current != NULL)
             assert(current->wait_state == 0);
-        proc->wait_state = 0;
-        proc->cptr = proc->yptr = proc->optr = NULL;
         proc->mm = NULL;
         memset(&(proc->context), 0, sizeof(struct context));
         proc->tf = NULL;
@@ -120,12 +118,17 @@ alloc_proc(void) {
      *       char name[PROC_NAME_LEN + 1];               // Process name
      */
      //LAB5 YOUR CODE : (update LAB4 steps)
+        proc->wait_state = 0;
+        proc->cptr = proc->yptr = proc->optr = NULL;
     /*
      * below fields(add in LAB5) in proc_struct need to be initialized	
      *       uint32_t wait_state;                        // waiting state
      *       struct proc_struct *cptr, *yptr, *optr;     // relations between processes
 	 */
      //LAB6 YOUR CODE : (update LAB5 steps)
+        proc->rq = NULL;
+        list_init(&(proc->run_link));
+        proc->time_slice = 0;
     /*
      * below fields(add in LAB6) in proc_struct need to be initialized
      *     struct run_queue *rq;                       // running queue contains Process
