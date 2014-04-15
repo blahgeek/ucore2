@@ -129,6 +129,9 @@ alloc_proc(void) {
         proc->rq = NULL;
         list_init(&(proc->run_link));
         proc->time_slice = 0;
+        skew_heap_init(&(proc->lab6_run_pool));
+        proc->lab6_stride = 0;
+        proc->lab6_priority = 1;
     /*
      * below fields(add in LAB6) in proc_struct need to be initialized
      *     struct run_queue *rq;                       // running queue contains Process
