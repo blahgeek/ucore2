@@ -846,8 +846,12 @@ init_main(void *arg) {
     if (pid <= 0) {
         panic("create user_main failed.\n");
     }
- extern void check_sync(void);
-    check_sync();                // check philosopher sync problem
+ // extern void check_sync(void);
+ //    check_sync();                // check philosopher sync problem
+    // extern void reader_first_using_semaphore();
+    // reader_first_using_semaphore();
+    extern void writer_first_using_monitor();
+    writer_first_using_monitor();
 
     while (do_wait(0, NULL) == 0) {
         schedule();
