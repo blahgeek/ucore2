@@ -326,6 +326,9 @@ MAKEOPTS	:= --quiet --no-print-directory
 run-%: build-%
 	$(V)$(QEMU) -parallel stdio $(QEMUOPTS) -serial null
 
+run-nox-%: build-%
+	$(V)$(QEMU) -serial mon:stdio $(QEMUOPTS) -nographic
+
 sh-%: script-%
 	$(V)$(QEMU) -parallel stdio $(QEMUOPTS) -serial null
 
